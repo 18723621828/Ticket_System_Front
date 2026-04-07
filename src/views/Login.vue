@@ -28,6 +28,7 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { message } from 'ant-design-vue';
+import { loginData } from '../data/tickets.js';
 
 export default {
   name: 'LoginPage'
@@ -35,7 +36,6 @@ export default {
 </script>
 
 <script setup>
-import axios from 'axios';
 
 const router = useRouter();
 const loginFormRef = ref(null);
@@ -54,27 +54,17 @@ const loginRules = {
   ]
 };
 
-const handleLogin = async () => {
-  try {
-    console.log('Login form:', loginForm);
-    console.log('Attempting to login...');
-    
-    // 使用axios发送登录请求
-    const response = await axios.post('/api/login', loginForm);
-    
-    console.log('Response:', response);
-    
-    if (response.data.code === 200) {
-      // 存储用户信息到localStorage
-      localStorage.setItem('user', JSON.stringify(response.data.data));
-      message.success('Login successful');
-      router.push('/home');
-    } else {
-      message.error(response.data.message || 'Login failed');
-    }
-  } catch (error) {
-    message.error('Login failed, please try again');
-    console.error('Login error:', error);
+const handleLogin = () => {
+  // 直接使用本地数据进行登录验证
+  const response = loginData(loginForm.username, loginForm.password);
+
+  if (response.code === 200) {
+    // 存储用户信息到localStorage
+    localStorage.setItem('user', JSON.stringify(response.data));
+    message.success('Login successful');
+    router.push('/home');
+  } else {
+    message.error(response.message || 'Login failed');
   }
 };
 </script>

@@ -48,7 +48,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { message, Modal } from 'ant-design-vue';
 import * as echarts from 'echarts';
-import { getTickets, deleteTicket } from '../api/ticket.js';
+import { tickets as ticketsData, deleteTicketData } from '../data/tickets.js';
 
 export default {
   name: 'HomePage'
@@ -58,7 +58,7 @@ export default {
 <script setup>
 
 const router = useRouter();
-const tickets = ref([]);
+const tickets = ref([...ticketsData]);
 const chartRef = ref(null);
 let chart = null;
 
@@ -174,20 +174,9 @@ const updateChart = () => {
   }
 };
 
-// 加载工单数据
-const loadTickets = async () => {
-  try {
-    const response = await getTickets();
-
-    if (response.data.code === 200) {
-      tickets.value = response.data.data;
-    } else {
-      message.error(response.data.message || 'Failed to load tickets');
-    }
-  } catch (error) {
-    message.error('Failed to load tickets');
-    console.error('Load tickets error:', error);
-  }
+// 加载工单数据（从本地数据）
+const loadTickets = () => {
+  tickets.value = [...ticketsData];
 };
 
 // 删除工单
@@ -198,19 +187,14 @@ const handleDelete = (id) => {
     okText: 'Delete',
     okType: 'danger',
     cancelText: 'Cancel',
-    async onOk() {
-      try {
-        const response = await deleteTicket(id);
+    onOk() {
+      const response = deleteTicketData(id);
 
-        if (response.data.code === 200) {
-          message.success('Ticket deleted successfully');
-          await loadTickets();
-        } else {
-          message.error(response.data.message || 'Failed to delete ticket');
-        }
-      } catch (error) {
-        message.error('Failed to delete ticket');
-        console.error('Delete ticket error:', error);
+      if (response.code === 200) {
+        message.success('Ticket deleted successfully');
+        loadTickets();
+      } else {
+        message.error(response.message || 'Failed to delete ticket');
       }
     }
   });
@@ -236,7 +220,6 @@ watch(tickets, () => {
 
 // 生命周期钩子
 onMounted(() => {
-  loadTickets();
   initChart();
   window.addEventListener('resize', handleResize);
 });
